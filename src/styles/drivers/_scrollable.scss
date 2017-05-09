@@ -1,0 +1,19 @@
+.scrollable {
+  height: 3000px;
+  background: linear-gradient(rgba(black ,0) 0%, rgba(black, .65) 100%);
+
+  &__input {
+    position: fixed;
+    top: 80px;
+    left: 20px;
+    width: auto;
+  }
+
+  &__counter {
+    position: fixed;
+    top: 86px;
+    left: 220px;
+    text-shadow: 0 0 4px white, 0 0 2px white;
+    font-size: 18px;
+  }
+}

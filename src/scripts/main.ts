@@ -1,53 +1,49 @@
 import {Observable} from 'rxjs';
-import {div, label, input, hr, h1, VNode, makeDOMDriver} from '@cycle/dom';
+import {div, input, p, VNode, makeDOMDriver} from '@cycle/dom';
 import {run} from '@cycle/rxjs-run';
 import {DOMSource} from '@cycle/dom/rxjs-typings';
+import {makeScrollDriver} from './drivers/makeScrollDriver';
 
 type Sources = {
     DOM: DOMSource;
+    Scroll: Observable<string>;
 }
 
 type Sinks = {
     DOM: Observable<VNode>;
+    Scroll: Observable<number>;
 }
 
 /**
  * アプリケーション
  * @param sources
- * @returns {{DOM: Observable<VNode>}}
+ * @returns {{DOM: Observable<R>, Scroll: Observable<number>}}
  */
 function main(sources: Sources): Sinks {
 
-    // キー入力イベントを取得 ( Intent )
-    const input$: Observable<Event> = sources.DOM.select('.field').events('input');
+    const input$: Observable<Event> = sources.DOM.select('.scrollable__input').events('input');
+    const offsetTop$: Observable<number> = Observable.from(input$).map((ev: Event): number => Number((ev.currentTarget as HTMLInputElement).value));
 
-    // 入力イベントから現在の状態ないし値を取得 ( Model )
-    const name$: Observable<string> = Observable.from(input$)
-        .map((ev: Event) => (ev.target as HTMLInputElement).value)
-        .startWith('');
+    const vdom$ = Observable.combineLatest(
+        sources.Scroll.startWith('0px'),
+        offsetTop$.startWith(0),
+        (scroll, offsetTop) => {
+            return div('.scrollable', [
+                input('.scrollable__input.form-control', {attrs: {type: 'number', value: offsetTop}}),
+                p('.scrollable__counter', scroll)
+            ]);
+        }
+    );
 
-    // 現在の状態を画面に描画 ( View )
-    const vdom$: Observable<VNode> = name$.map(name => {
-        return div('.well', [
-            div('.form-group', [
-                label('Name: '),
-                input('.field.form-control', {attrs: {type: 'text'}}),
-            ]),
-            hr(),
-            h1(`Hello ${name}!`)
-        ]);
-    });
-
-    // 結果をドライバに出力する ( Sinks )
     return {
-        DOM: vdom$
+        DOM: vdom$,
+        Scroll: offsetTop$
     };
 }
 
-// アプリケーションからの戻り値を受け取るドライバ群を定義
 const drivers = {
-    DOM: makeDOMDriver('#apps')  // DOM をレンダリングするドライバ
+    DOM: makeDOMDriver('#app'),
+    Scroll: makeScrollDriver()
 };
 
-// アプリケーションとドライバを結びつける
 run(main, drivers);
