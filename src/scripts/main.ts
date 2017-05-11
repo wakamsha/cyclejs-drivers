@@ -17,7 +17,7 @@ type Sinks = {
 /**
  * アプリケーション
  * @param sources
- * @returns {{DOM: Observable<R>, Scroll: Observable<number>}}
+ * @returns {{DOM: (Observable<(T|T2|T3|T4)[]>|Observable<R>), Scroll: Observable<number>}}
  */
 function main(sources: Sources): Sinks {
 
@@ -29,7 +29,7 @@ function main(sources: Sources): Sinks {
         offsetTop$.startWith(0),
         (scroll, offsetTop) => {
             return div('.scrollable', [
-                input('.scrollable__input.form-control', {attrs: {type: 'number', value: offsetTop}}),
+                input('.scrollable__input.form-control', { attrs: { type: 'number', value: offsetTop } }),
                 p('.scrollable__counter', scroll)
             ]);
         }
@@ -43,7 +43,7 @@ function main(sources: Sources): Sinks {
 
 const drivers = {
     DOM: makeDOMDriver('#app'),
-    Scroll: makeScrollDriver()
+    Scroll: makeScrollDriver({ element: document.body, duration: 600 })
 };
 
 run(main, drivers);
