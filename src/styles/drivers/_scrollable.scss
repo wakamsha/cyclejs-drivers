@@ -9,11 +9,10 @@
     left: 20px;
   }
 
-  &__counter {
+  &__output {
     position: fixed;
     top: 86px;
-    left: 220px;
-    text-shadow: 0 0 4px white, 0 0 2px white;
+    right: 20px;
     font-size: 18px;
   }
 }
