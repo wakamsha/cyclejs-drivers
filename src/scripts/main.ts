@@ -1,12 +1,12 @@
 import {Observable} from 'rxjs';
-import {div, input, VNode, makeDOMDriver} from '@cycle/dom';
+import {div, input, VNode, makeDOMDriver, button, span, CycleDOMEvent} from '@cycle/dom';
 import {run} from '@cycle/rxjs-run';
 import {DOMSource} from '@cycle/dom/rxjs-typings';
 import {makeScrollDriver} from './drivers/makeScrollDriver';
 
 type Sources = {
     DOM: DOMSource;
-    Scroll: Observable<string>;
+    // Scroll: Observable<string>;
 }
 
 type Sinks = {
@@ -14,10 +14,23 @@ type Sinks = {
     Scroll: Observable<number>;
 }
 
-function render(offsetTop: number): VNode {
+function render(state: {
+    value: number;
+}): VNode {
     return div('.scrollable', [
-        input('.scrollable__input.form-control', { attrs: { type: 'number', value: `${offsetTop}` } }),
-
+        div('.input-group.scrollable__control', [
+            span('.input-group-addon', [state.value]),
+            input('.scrollable__input.form-control', {
+                props: {
+                    type: 'number',
+                    value: `${state.value}`,
+                    min: 0
+                }
+            }),
+            span('.input-group-btn', [
+                button('.scrollable__button.btn.btn-primary', ['Go'])
+            ]),
+        ]),
     ]);
 }
 /**
@@ -27,16 +40,33 @@ function render(offsetTop: number): VNode {
  */
 function main(sources: Sources): Sinks {
 
-    const input$: Observable<Event> = sources.DOM.select('.scrollable__input').events('input');
-    const offsetTop$: Observable<number> = Observable.from(input$).map((ev: Event): number => Number((ev.currentTarget as HTMLInputElement).value));
+    const inputEvent$ = sources.DOM.select('.scrollable__input').events('input');
+    const clickEvent$: Observable<Event> = sources.DOM.select('.scrollable__button').events('click');
+    // const offsetTop$: Observable<number> = Observable.from(input$).map((ev: Event): number => Number((ev.currentTarget as HTMLInputElement).value));
 
-    const vdom$ = Observable.combineLatest(
-        offsetTop$.startWith(0),
-        (offsetTop) => render(offsetTop)
+
+    // State
+
+    const defaultState = {
+        value: 0
+    };
+    const state$ = Observable.from(inputEvent$)
+        .map((e: CycleDOMEvent) => Number((e.ownerTarget as HTMLInputElement).value))
+        .map(value => ({ value }))
+        .startWith(defaultState);
+
+
+    // Sink
+
+    const dom$ = state$.map(state => render(state));
+
+    const offsetTop$ = clickEvent$.withLatestFrom(
+        state$,
+        (_, state) => state.value
     );
 
     return {
-        DOM: vdom$,
+        DOM: dom$,
         Scroll: offsetTop$
     };
 }

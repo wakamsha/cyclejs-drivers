@@ -2,11 +2,11 @@
   height: 3000px;
   background: linear-gradient(rgba(black ,0) 0%, rgba(black, .65) 100%);
 
-  &__input {
+  &__control {
+    width: 200px;
     position: fixed;
     top: 80px;
     left: 20px;
-    width: auto;
   }
 
   &__counter {
