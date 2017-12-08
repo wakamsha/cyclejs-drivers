@@ -1,5 +1,5 @@
 import {Observable} from 'rxjs';
-import {div, input, p, VNode, makeDOMDriver} from '@cycle/dom';
+import {div, input, VNode, makeDOMDriver} from '@cycle/dom';
 import {run} from '@cycle/rxjs-run';
 import {DOMSource} from '@cycle/dom/rxjs-typings';
 import {makeScrollDriver} from './drivers/makeScrollDriver';
@@ -14,6 +14,12 @@ type Sinks = {
     Scroll: Observable<number>;
 }
 
+function render(offsetTop: number): VNode {
+    return div('.scrollable', [
+        input('.scrollable__input.form-control', { attrs: { type: 'number', value: `${offsetTop}` } }),
+
+    ]);
+}
 /**
  * アプリケーション
  * @param sources
@@ -25,14 +31,8 @@ function main(sources: Sources): Sinks {
     const offsetTop$: Observable<number> = Observable.from(input$).map((ev: Event): number => Number((ev.currentTarget as HTMLInputElement).value));
 
     const vdom$ = Observable.combineLatest(
-        sources.Scroll.startWith('0px'),
         offsetTop$.startWith(0),
-        (scroll, offsetTop) => {
-            return div('.scrollable', [
-                input('.scrollable__input.form-control', { attrs: { type: 'number', value: offsetTop } }),
-                p('.scrollable__counter', scroll)
-            ]);
-        }
+        (offsetTop) => render(offsetTop)
     );
 
     return {
@@ -43,7 +43,8 @@ function main(sources: Sources): Sinks {
 
 const drivers = {
     DOM: makeDOMDriver('#app'),
-    Scroll: makeScrollDriver({ element: document.body, duration: 600 })
+    Scroll: makeScrollDriver()
 };
 
 run(main, drivers);
+

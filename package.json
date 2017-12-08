@@ -5,9 +5,6 @@
   "repository": "git@github.com:wakamsha/cyclejs-drivers.git",
   "author": "wakamsha <wakamsha@gmail.com>",
   "license": "MIT",
-  "scripts": {
-    "watch": "bash ./bin/watch.sh"
-  },
   "dependencies": {
     "@cycle/dom": "^17.1.0",
     "@cycle/run": "^3.1.0",
@@ -17,19 +14,21 @@
   },
   "devDependencies": {
     "browser-sync": "^2.18.8",
-    "browserify": "^14.3.0",
-    "gulp": "^3.9.1",
-    "gulp-notify": "^3.0.0",
-    "gulp-plumber": "^1.1.0",
-    "gulp-pug": "^3.3.0",
-    "gulp-sass": "^3.1.0",
-    "gulp-sourcemaps": "^2.6.0",
+    "concurrently": "^3.5.1",
     "node-sass": "^4.5.2",
     "pug": "^2.0.0-rc.1",
     "pug-cli": "^1.0.0-alpha6",
-    "tsify": "^3.0.1",
+    "ts-loader": "^3.2.0",
     "typescript": "^2.3.2",
-    "vinyl-source-stream": "^1.1.0",
-    "watchify": "^3.9.0"
+    "webpack": "^3.10.0"
+  },
+  "scripts": {
+    "reset": "rm -rf public; mkdir -p public/",
+    "template": "pug src/templates/ -o public/ -H -P -w",
+    "style:watch": "node-sass src/styles/ -o public/ --source-map-embed -w",
+    "style:build": "node-sass src/styles/ -o public/ --output-style compressed",
+    "script": "webpack --progress --colors --config ./webpack.config.js --watch -d",
+    "serv": "browser-sync start -c bs-config.js",
+    "start": "yarn reset; yarn style:build; concurrently \"yarn template\" \"yarn style:watch\" \"yarn script\" \"yarn serv\""
   }
 }
